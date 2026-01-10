@@ -13,10 +13,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        # Include resources
-        ('resources', 'resources'),
-        # Include templates
-        ('resources/templates', 'resources/templates'),
+        # Include resources (only if directory exists)
+        # ('resources', 'resources'),
     ],
     hiddenimports=[
         # PyQt6 modules
@@ -33,9 +31,9 @@ a = Analysis(
         # PDF processing
         'PyPDF2',
         'pdfplumber',
-        'camelot',
-        'cv2',
-        'pytesseract',
+        # 'camelot',  # Optional - commented out in requirements
+        # 'cv2',  # Optional
+        # 'pytesseract',  # Optional
 
         # Data processing
         'pandas',
@@ -123,8 +121,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='resources/icons/app_icon.ico',  # Application icon
-    version='version_info.txt',  # Version information
+    icon=None,  # Application icon (not yet created)
+    # version='version_info.txt',  # Version information
     uac_admin=False,  # Don't require admin rights
     uac_uiaccess=False,
 )
