@@ -1,0 +1,66 @@
+# RecoveryAssistant Desktop - Python Dependencies
+
+# Core
+python-dateutil>=2.8.2
+python-dotenv>=1.0.0
+
+# GUI Framework
+PyQt6>=6.6.0
+PyQt6-Charts>=6.6.0
+
+# Database
+SQLAlchemy>=2.0.0
+alembic>=1.12.0
+
+# PDF Processing
+PyPDF2>=3.0.1
+pdfplumber>=0.10.3
+camelot-py[cv]>=0.11.0
+pytesseract>=0.3.10
+
+# CSV/Excel Processing
+pandas>=2.1.0
+openpyxl>=3.1.2
+xlrd>=2.0.1
+
+# Microsoft Office Integration
+pywin32>=306  # Windows only - for Outlook integration
+comtypes>=1.2.0  # Windows COM automation
+
+# Accounting Software Integration
+xero-python>=2.0.0  # Xero API
+python-quickbooks>=0.10.0  # QuickBooks (optional)
+
+# AI & Communication
+openai>=1.6.0
+
+# Payment Processing
+stripe>=7.0.0
+
+# HTTP & API
+requests>=2.31.0
+httpx>=0.25.0
+
+# Utilities
+python-slugify>=8.0.1
+phonenumbers>=8.13.0
+email-validator>=2.1.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Logging & Monitoring
+loguru>=0.7.2
+
+# Task Scheduling
+APScheduler>=3.10.4
+
+# Encryption & Security
+cryptography>=41.0.0
+
+# Testing (Development)
+pytest>=7.4.0
+pytest-qt>=4.2.0
+pytest-mock>=3.12.0
+
+# Packaging & Distribution
+pyinstaller>=6.3.0

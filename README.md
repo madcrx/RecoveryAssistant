@@ -1,8 +1,8 @@
-# RecoveryAssistant
+# RecoveryAssistant Desktop
 
-## AI-Powered Automated Receivables Collection System
+## Standalone AI-Powered Automated Receivables Collection
 
-RecoveryAssistant is a world-class, fully automated receivables collection solution that achieves 99% collection rates through intelligent AI-powered communications, seamless payment processing, and proactive dispute prevention.
+RecoveryAssistant Desktop is a world-class Windows application for automated receivables collection that achieves 99% collection rates. It runs entirely on your PC, integrates with Microsoft Outlook and accounting software (Xero, QuickBooks), and requires minimal user input.
 
 ## Key Features
 
@@ -12,10 +12,12 @@ RecoveryAssistant is a world-class, fully automated receivables collection solut
 - Multi-channel engagement (Email, SMS, Self-Service Portal)
 - Predictive analytics for collection probability
 
-### 📄 **Intelligent PDF Processing**
-- Automatic extraction of aged receivables data from PDF reports
-- Supports multiple PDF formats (structured and scanned)
-- AI-powered parsing when traditional methods fail
+### 📄 **Multiple Data Import Options**
+- **PDF Import**: Drag & drop aged receivables PDFs with automatic extraction
+- **CSV Import**: Template-based import with column mapping wizard
+- **Xero Integration**: Direct sync with Xero accounting software
+- **QuickBooks Integration**: Connect to QuickBooks Desktop/Online (coming soon)
+- Supports scanned documents with OCR
 - Instant customer and invoice creation
 
 ### 🤖 **AI-Powered Communications**
@@ -49,184 +51,212 @@ RecoveryAssistant is a world-class, fully automated receivables collection solut
 - Payment plan options
 - Customer self-service portal
 
+### 📧 **Microsoft Outlook Integration**
+- Sends emails directly from YOUR Outlook account
+- No third-party email services required
+- Maintains all emails in your Sent Items
+- Professional emails from your domain
+- Automatic signature inclusion
+- Uses your existing email infrastructure
+
 ## Technology Stack
 
-### Backend
-- **FastAPI** - High-performance async Python web framework
-- **PostgreSQL** - Robust relational database
-- **Redis** - Caching and task queue
-- **Celery** - Background job processing
-- **OpenAI GPT-4** - AI-powered communication generation
-- **Stripe** - Payment processing
-- **SendGrid** - Email delivery
-- **Twilio** - SMS notifications
+### Desktop Application
+- **Python 3.11+** - Core application logic
+- **PyQt6** - Professional cross-platform GUI framework
+- **SQLite** - Embedded local database (no server needed)
+- **pywin32** - Microsoft Outlook COM automation
 
-### Frontend
-- **React 18** - Modern UI framework
-- **TypeScript** - Type-safe development
-- **Material-UI** - Professional UI components
-- **Redux Toolkit** - State management
-- **Recharts** - Data visualization
+### Data Import
+- **PyPDF2/pdfplumber/Camelot** - PDF parsing and table extraction
+- **pandas** - CSV/Excel data processing
+- **Xero Python SDK** - Xero accounting integration
+- **pytesseract** - OCR for scanned documents
 
-### AI & ML
-- **OpenAI API** - Natural language generation
-- **scikit-learn** - Predictive modeling
-- **PyPDF2/pdfplumber/Camelot** - PDF parsing
+### AI & Communication
+- **OpenAI GPT-4** - AI-powered message generation
+- **Stripe API** - Secure payment processing
+- **Twilio** - SMS notifications (optional)
+
+### Storage & Configuration
+- **SQLAlchemy** - Database ORM
+- **JSON** - Configuration storage in AppData
+- **Rotating logs** - Application logging
 
 ## Quick Start
 
-### Prerequisites
-- Docker & Docker Compose
-- OpenAI API key
-- Stripe API key
-- SendGrid API key (optional)
-- Twilio account (optional)
+### System Requirements
+- **Windows 10/11** (64-bit)
+- **Microsoft Outlook** installed and configured
+- **500MB** free disk space
+- **Internet connection** (for API calls)
+- **Python 3.11+** (for development)
 
-### 1. Clone the Repository
+### Installation Methods
+
+#### Option 1: Windows Installer (Recommended for End Users)
+1. Download `RecoveryAssistant_Setup.exe` from Releases
+2. Run the installer
+3. Launch RecoveryAssistant from Start Menu
+4. Complete the setup wizard:
+   - Enter OpenAI API key
+   - Connect to Xero (optional)
+   - Configure Stripe for payments (optional)
+5. Import your first receivables data
+6. Start collecting!
+
+#### Option 2: Run from Source (for Developers)
 ```bash
+# Clone repository
 git clone https://github.com/yourusername/RecoveryAssistant.git
-cd RecoveryAssistant
+cd RecoveryAssistant/desktop_app
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run application
+python main.py
 ```
 
-### 2. Configure Environment Variables
-```bash
-# Copy example environment file
-cp backend/.env.example backend/.env
+### First Time Setup
 
-# Edit backend/.env with your API keys:
-# - OPENAI_API_KEY
-# - STRIPE_API_KEY
-# - SENDGRID_API_KEY (optional)
-# - TWILIO_ACCOUNT_SID (optional)
-# - TWILIO_AUTH_TOKEN (optional)
-```
+**1. Launch Application**
+- The setup wizard will guide you through configuration
 
-### 3. Start the Application
-```bash
-# Build and start all services
-docker-compose up -d
+**2. Configure Integrations**
+- **OpenAI API**: Required for AI-powered messages
+  - Get key from https://platform.openai.com
+- **Microsoft Outlook**: Automatically detected
+- **Xero**: Optional - for automatic invoice sync
+  - Get credentials from Xero Developer Portal
+- **Stripe**: Optional - for payment processing
+  - Get keys from Stripe Dashboard
 
-# Check service status
-docker-compose ps
+**3. Import Data**
+Choose your data source:
+- **PDF**: Upload aged receivables PDF report
+- **CSV**: Download template and upload filled CSV
+- **Xero**: Click "Sync with Xero" to import invoices
 
-# View logs
-docker-compose logs -f
-```
+**4. Review & Customize**
+- Review imported invoices and customers
+- Customize workflow schedules if needed
+- Test Outlook email sending
 
-### 4. Initialize the Database
-```bash
-# Run database migrations
-docker-compose exec backend alembic upgrade head
-```
-
-### 5. Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+**5. Activate Automation**
+- Enable automatic workflows
+- System will handle collections automatically!
 
 ## Usage Guide
 
-### Uploading Receivables Reports
+### Daily Workflow (5-10 Minutes)
 
-1. Navigate to **Upload Report** in the sidebar
-2. Click **Select PDF File** and choose your aged receivables PDF
-3. Click **Upload and Process**
-4. The system will:
-   - Extract all invoice data
-   - Create/update customer records
-   - Trigger automated collection workflows
-   - Display summary statistics
+**Morning:**
+1. Launch RecoveryAssistant (auto-starts with Windows)
+2. Review Dashboard for overnight activity
+3. Check any high-priority alerts
+4. The system automatically:
+   - Sends scheduled reminder emails via Outlook
+   - Updates invoice aging
+   - Tracks payment promises
+   - Escalates overdue accounts
 
-### Viewing Dashboard
+**As Needed:**
+- Review and respond to customer replies in Outlook
+- Handle disputed invoices manually
+- Adjust workflow rules for specific customers
+- Generate reports for management
 
-The dashboard provides real-time insights:
-- Total outstanding receivables
-- Collection rate (30-day)
-- Payments received this month
-- Average days to payment
-- Aging distribution chart
-- High-risk customer count
+### Importing Receivables Data
+
+**PDF Import:**
+1. Click **File → Import PDF**
+2. Select your aged receivables PDF
+3. System automatically extracts all data
+4. Review import summary
+5. Invoices and customers created/updated
+
+**CSV Import:**
+1. Click **File → Import CSV**
+2. If first time: Download CSV template
+3. Fill template with your data
+4. Import and map columns
+5. Verify and confirm import
+
+**Xero Sync:**
+1. Click **Integrations → Sync with Xero**
+2. Authenticate (first time only)
+3. Select date range to sync
+4. System imports invoices and customers
+5. Set up auto-sync for daily updates
+
+### Dashboard Overview
+
+The main dashboard shows:
+- 💰 **Total Outstanding**: All unpaid invoices
+- 📈 **Collection Rate**: 30-day collection percentage
+- 💵 **Payments This Month**: Total collected
+- ⏱️ **Average Days to Payment**: Performance metric
+- 📊 **Aging Distribution**: Visual breakdown by aging bucket
+- ⚠️ **High-Risk Customers**: Customers needing attention
 
 ### Managing Invoices
 
-- View all invoices with filtering options
-- See status (Open, Paid, Overdue, Disputed)
-- Track aging buckets (Current, 0-30, 31-60, 61-90, 90+)
-- Monitor days outstanding
+**Invoices Tab:**
+- View all invoices in sortable table
+- Filter by status, aging bucket, customer
+- Search by invoice number
+- Click invoice to see:
+  - Full details
+  - Payment history
+  - Communication history
+  - Associated customer info
+- Actions:
+  - Send manual reminder
+  - Record payment
+  - Mark as disputed
+  - Add notes
 
 ### Managing Customers
 
-- View customer list with risk levels
-- Check payment scores
-- See outstanding balances
-- Update communication preferences
+**Customers Tab:**
+- View all customers with payment scores
+- See risk levels (Low, Medium, High, Critical)
+- Check total outstanding balances
+- Click customer to see:
+  - All invoices
+  - Payment history
+  - Communication preferences
+  - Contact information
+- Actions:
+  - Update contact info
+  - Disable auto-reminders
+  - View communication history
+  - Send custom message
 
-## API Documentation
+### Communication Log
 
-### Upload Receivables Report
-```bash
-POST /api/v1/receivables/upload
-Content-Type: multipart/form-data
-
-# Response
-{
-  "success": true,
-  "filename": "aged_receivables.pdf",
-  "total_outstanding": 150000.00,
-  "statistics": {
-    "invoices_created": 25,
-    "invoices_updated": 10,
-    "customers_created": 5,
-    "total_invoices": 35
-  }
-}
-```
-
-### Create Payment Link
-```bash
-POST /api/v1/payments/create-link
-Content-Type: application/json
-
-{
-  "invoice_id": 123
-}
-
-# Response
-{
-  "success": true,
-  "payment_url": "https://checkout.stripe.com/...",
-  "invoice_number": "INV-12345",
-  "amount": 5000.00
-}
-```
-
-### Get Dashboard Metrics
-```bash
-GET /api/v1/analytics/dashboard
-
-# Response
-{
-  "total_outstanding": 250000.00,
-  "collection_rate_30_days": 98.5,
-  "payments_this_month": 150000.00,
-  "average_days_to_pay": 28.5,
-  "aging_distribution": {
-    "amounts": {
-      "current": 50000,
-      "0-30": 75000,
-      "31-60": 50000,
-      "61-90": 40000,
-      "90+": 35000
-    }
-  }
-}
-```
-
-Full API documentation available at: http://localhost:8000/docs
+**Communications Tab:**
+- See all sent emails and SMS
+- Track delivery and open rates
+- View customer responses
+- Filter by customer, date, type
+- Resend failed communications
 
 ## Architecture
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system architecture.
+See [ARCHITECTURE_DESKTOP.md](ARCHITECTURE_DESKTOP.md) for detailed desktop application architecture.
+
+**Key Design Principles:**
+- **Standalone**: No web server required
+- **Local Data**: SQLite database in your Documents folder
+- **Office Integration**: Uses your Outlook for emails
+- **Minimal Configuration**: Setup wizard makes it easy
+- **Privacy First**: All data stays on your PC
 
 ## Workflow Automation
 
@@ -279,20 +309,59 @@ Track your collection performance:
 
 ### Common Issues
 
-**PDF Upload Fails:**
-- Check file size (< 10MB)
+**Application Won't Start:**
+- Ensure Windows 10/11 64-bit
+- Check Python 3.11+ installed
+- Run as Administrator if permission errors
+- Check logs: `%AppData%\RecoveryAssistant\Logs`
+
+**Outlook Emails Not Sending:**
+- Verify Microsoft Outlook is installed and configured
+- Check default email account is set
+- Try sending a test email from Outlook directly
+- Run "Test Outlook Connection" from menu
+- Restart Outlook and RecoveryAssistant
+
+**PDF Import Fails:**
+- Check file size (< 10MB recommended)
 - Ensure PDF is not password protected
-- Verify PDF contains extractable text or tables
+- For scanned PDFs, OCR will run (takes longer)
+- Try CSV import as alternative
+- Check PDF contains tables (not just text)
 
-**Payments Not Processing:**
-- Verify Stripe API keys are correct
-- Check webhook configuration
-- Ensure customer email is valid
+**CSV Import Errors:**
+- Download and use provided template
+- Verify all required columns present
+- Check date format matches selected format
+- Ensure amounts are numeric (no text)
+- Look for special characters in customer names
 
-**Workflows Not Triggering:**
-- Check Celery worker is running: `docker-compose logs celery-worker`
-- Verify Redis connection
-- Check customer communication preferences
+**Xero Sync Not Working:**
+- Re-authenticate in Settings → Integrations
+- Check internet connection
+- Verify Xero credentials are valid
+- Check Xero organization has invoices
+- Try manual sync first
+
+**Workflows Not Running:**
+- Check "Workflows Enabled" in Settings
+- Verify customer has "Auto Reminders" enabled
+- Check workflow schedule settings
+- Review logs for errors
+- Manually trigger workflow to test
+
+**Database Issues:**
+- Location: `Documents\RecoveryAssistant\receivables.db`
+- Backup regularly: File → Backup Database
+- If corrupted, restore from backup
+- Check disk space available
+
+**AI Messages Not Generating:**
+- Verify OpenAI API key in Settings
+- Check API key has credits
+- Test API key at https://platform.openai.com
+- Falls back to templates if AI unavailable
+- Check internet connection
 
 ## License
 
