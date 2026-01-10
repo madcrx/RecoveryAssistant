@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -242,33 +243,23 @@ class MainWindow(QMainWindow):
 
     def _import_pdf(self):
         """Import PDF file"""
+        from .import_wizard import ImportDialog
 
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select PDF File",
-            "",
-            "PDF Files (*.pdf)"
-        )
-
-        if file_path:
-            logger.info(f"Importing PDF: {file_path}")
-            # TODO: Implement PDF import
-            self.status_label.setText(f"Importing PDF: {file_path}")
+        dialog = ImportDialog('pdf', self.db_manager, self)
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            # Refresh views after import
+            self._refresh_all()
+            self.status_label.setText("PDF import completed")
 
     def _import_csv(self):
         """Import CSV file"""
+        from .import_wizard import ImportDialog
 
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select CSV File",
-            "",
-            "CSV Files (*.csv)"
-        )
-
-        if file_path:
-            logger.info(f"Importing CSV: {file_path}")
-            # TODO: Implement CSV import
-            self.status_label.setText(f"Importing CSV: {file_path}")
+        dialog = ImportDialog('csv', self.db_manager, self)
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            # Refresh views after import
+            self._refresh_all()
+            self.status_label.setText("CSV import completed")
 
     def _backup_database(self):
         """Backup database"""
@@ -371,15 +362,17 @@ class MainWindow(QMainWindow):
 
     def _show_integration_settings(self):
         """Show integration settings dialog"""
+        from .settings_dialogs import IntegrationSettingsDialog
 
-        # TODO: Implement settings dialog
-        QMessageBox.information(self, "Settings", "Integration settings dialog")
+        dialog = IntegrationSettingsDialog(self.config_manager, self)
+        dialog.exec()
 
     def _show_workflow_settings(self):
         """Show workflow settings dialog"""
+        from .settings_dialogs import WorkflowSettingsDialog
 
-        # TODO: Implement settings dialog
-        QMessageBox.information(self, "Settings", "Workflow settings dialog")
+        dialog = WorkflowSettingsDialog(self.config_manager, self)
+        dialog.exec()
 
     def _show_user_guide(self):
         """Show user guide"""
