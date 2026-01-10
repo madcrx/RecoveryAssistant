@@ -8,6 +8,20 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
+import traceback
+
+
+# Store last error for display
+_last_error = None
+
+
+class ErrorCapturingHandler(logging.Handler):
+    """Handler that captures ERROR level messages"""
+
+    def emit(self, record):
+        global _last_error
+        if record.levelno >= logging.ERROR:
+            _last_error = self.format(record)
 
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
@@ -58,6 +72,20 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     )
     file_handler.setFormatter(file_format)
     logger.addHandler(file_handler)
+
+    # Error capturing handler
+    error_handler = ErrorCapturingHandler()
+    error_handler.setFormatter(file_format)
+    logger.addHandler(error_handler)
+
+    # Add get_last_error method to logger
+    def get_last_error():
+        """Get last error message with traceback"""
+        if _last_error:
+            return _last_error
+        return traceback.format_exc()
+
+    logger.get_last_error = get_last_error
 
     logger.info("Logging initialized")
     logger.info(f"Log file: {log_file}")
