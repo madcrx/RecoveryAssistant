@@ -1,0 +1,112 @@
+================================================================================
+                    RecoveryAssistant Desktop - Installation
+================================================================================
+
+Thank you for installing RecoveryAssistant!
+
+WHAT IS RECOVERYASSISTANT?
+--------------------------
+RecoveryAssistant is an AI-powered automated receivables collection system that
+achieves 99% collection rates through intelligent communication, seamless payment
+processing, and proactive dispute prevention.
+
+SYSTEM REQUIREMENTS:
+--------------------
+• Windows 10 or Windows 11 (64-bit)
+• Microsoft Outlook installed and configured
+• 500 MB free disk space
+• Internet connection (for API calls)
+
+PREREQUISITES:
+--------------
+Before you can use RecoveryAssistant, you will need:
+
+1. OpenAI API Key (REQUIRED)
+   - Sign up at: https://platform.openai.com
+   - Create an API key in your account settings
+   - Used for AI-powered communication generation
+
+2. Microsoft Outlook (REQUIRED)
+   - Must be installed and configured with your email account
+   - Used for sending collection emails from your domain
+
+3. Xero Credentials (OPTIONAL - for automatic invoice sync)
+   - Sign up at: https://developer.xero.com
+   - Create an OAuth2 app
+   - Note your Client ID and Client Secret
+
+4. Stripe API Keys (OPTIONAL - for payment processing)
+   - Sign up at: https://stripe.com
+   - Get your API keys from the Dashboard
+   - Used for secure payment link generation
+
+AFTER INSTALLATION:
+-------------------
+When you first launch RecoveryAssistant, a setup wizard will guide you through:
+
+1. Entering your OpenAI API key
+2. Testing Outlook connection
+3. Connecting to Xero (optional)
+4. Configuring Stripe (optional)
+5. Importing your first receivables data
+
+The entire setup takes about 5 minutes.
+
+WHAT GETS INSTALLED:
+--------------------
+• Application: C:\Program Files\RecoveryAssistant\RecoveryAssistant.exe
+• Database: C:\Users\[YourName]\Documents\RecoveryAssistant\receivables.db
+• Configuration: C:\Users\[YourName]\AppData\Roaming\RecoveryAssistant\config.json
+• Logs: C:\Users\[YourName]\AppData\Roaming\RecoveryAssistant\Logs\
+
+YOUR DATA IS PRIVATE:
+---------------------
+All your data stays on your computer. Nothing is sent to the cloud except:
+• OpenAI API calls (for generating messages)
+• Stripe API calls (for payment processing, if configured)
+• Xero API calls (for syncing invoices, if configured)
+
+GETTING STARTED:
+----------------
+After installation:
+
+1. Launch RecoveryAssistant from the Start Menu
+2. Complete the setup wizard
+3. Import your receivables data:
+   - Upload a PDF aged receivables report, OR
+   - Import a CSV file (template available), OR
+   - Sync with Xero
+4. Review the imported data
+5. Enable automated workflows
+6. Let RecoveryAssistant handle your collections!
+
+DAILY USAGE (5-10 minutes):
+---------------------------
+• Launch the application (or let it auto-start)
+• Review the dashboard
+• Handle any flagged issues
+• System automatically sends reminders, escalates overdue accounts,
+  and tracks payments in the background
+
+SUPPORT:
+--------
+• User Guide: Available in Start Menu or Help menu
+• Quick Start Guide: Step-by-step walkthrough
+• Logs: Check AppData\Roaming\RecoveryAssistant\Logs for troubleshooting
+• GitHub Issues: Report bugs or request features
+
+UNINSTALLATION:
+---------------
+To uninstall RecoveryAssistant:
+1. Go to Settings > Apps > Apps & features
+2. Find "RecoveryAssistant"
+3. Click Uninstall
+
+Your database and configuration files will be preserved unless you manually
+delete them from your Documents and AppData folders.
+
+================================================================================
+
+Ready to install? Click "Next" to continue.
+
+================================================================================

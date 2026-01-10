@@ -1,0 +1,65 @@
+RECOVERYASSISTANT END USER LICENSE AGREEMENT
+
+Copyright (c) 2024 RecoveryAssistant Inc. All Rights Reserved.
+
+IMPORTANT - READ CAREFULLY: This End-User License Agreement ("EULA") is a legal
+agreement between you (either an individual or a single entity) and RecoveryAssistant
+Inc. for the RecoveryAssistant software product, which includes computer software and
+may include associated media, printed materials, and online or electronic documentation
+("SOFTWARE PRODUCT").
+
+By installing, copying, or otherwise using the SOFTWARE PRODUCT, you agree to be bound
+by the terms of this EULA. If you do not agree to the terms of this EULA, do not install
+or use the SOFTWARE PRODUCT.
+
+1. GRANT OF LICENSE
+RecoveryAssistant Inc. grants you the following rights:
+a) Installation and Use: You may install and use the SOFTWARE PRODUCT on a single computer.
+b) Backup Copy: You may make one backup copy of the SOFTWARE PRODUCT for archival purposes.
+
+2. DESCRIPTION OF OTHER RIGHTS AND LIMITATIONS
+a) Limitations on Reverse Engineering: You may not reverse engineer, decompile, or
+   disassemble the SOFTWARE PRODUCT.
+b) Separation of Components: The SOFTWARE PRODUCT is licensed as a single product and
+   its components may not be separated for use on more than one computer.
+c) Rental: You may not rent, lease, or lend the SOFTWARE PRODUCT.
+d) Support Services: RecoveryAssistant Inc. may provide you with support services related
+   to the SOFTWARE PRODUCT.
+
+3. INTELLECTUAL PROPERTY RIGHTS
+All title and intellectual property rights in and to the SOFTWARE PRODUCT are owned by
+RecoveryAssistant Inc. The SOFTWARE PRODUCT is protected by copyright laws and
+international treaty provisions.
+
+4. DATA COLLECTION AND PRIVACY
+The SOFTWARE PRODUCT stores data locally on your computer. No data is transmitted to
+RecoveryAssistant Inc. except for:
+a) OpenAI API calls for message generation (if configured)
+b) Stripe API calls for payment processing (if configured)
+c) Xero API calls for accounting synchronization (if configured)
+
+5. THIRD-PARTY SERVICES
+The SOFTWARE PRODUCT may integrate with third-party services (OpenAI, Stripe, Xero).
+Use of these services is subject to their respective terms of service and privacy policies.
+
+6. WARRANTY DISCLAIMER
+THE SOFTWARE PRODUCT IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. RECOVERYASSISTANT
+INC. DISCLAIMS ALL WARRANTIES, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+7. LIMITATION OF LIABILITY
+IN NO EVENT SHALL RECOVERYASSISTANT INC. BE LIABLE FOR ANY DAMAGES WHATSOEVER
+(INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS
+INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR OTHER PECUNIARY LOSS) ARISING OUT OF
+THE USE OF OR INABILITY TO USE THIS SOFTWARE PRODUCT.
+
+8. TERMINATION
+This EULA is effective until terminated. Your rights under this EULA will terminate
+automatically without notice if you fail to comply with any term(s) of this EULA.
+
+9. GOVERNING LAW
+This EULA shall be governed by the laws of [Your Jurisdiction].
+
+If you have any questions concerning this EULA, please contact:
+RecoveryAssistant Inc.
+Email: support@recoveryassistant.com
