@@ -15,8 +15,8 @@ alembic>=1.12.0
 # PDF Processing
 PyPDF2>=3.0.1
 pdfplumber>=0.10.3
-camelot-py[cv]>=0.11.0
-pytesseract>=0.3.10
+# camelot-py[cv]>=0.11.0  # Optional - heavy dependency
+# pytesseract>=0.3.10  # Optional - requires Tesseract OCR installation
 
 # CSV/Excel Processing
 pandas>=2.1.0
@@ -29,7 +29,7 @@ comtypes>=1.2.0  # Windows COM automation
 
 # Accounting Software Integration
 xero-python>=2.0.0  # Xero API
-python-quickbooks>=0.10.0  # QuickBooks (optional)
+# python-quickbooks  # QuickBooks (optional - not available in current version)
 
 # AI & Communication
 openai>=1.6.0
@@ -57,10 +57,10 @@ APScheduler>=3.10.4
 # Encryption & Security
 cryptography>=41.0.0
 
-# Testing (Development)
-pytest>=7.4.0
-pytest-qt>=4.2.0
-pytest-mock>=3.12.0
-
 # Packaging & Distribution
 pyinstaller>=6.3.0
+
+# Testing (Development - not needed for build)
+# pytest>=7.4.0
+# pytest-qt>=4.2.0
+# pytest-mock>=3.12.0
