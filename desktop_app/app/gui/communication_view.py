@@ -137,7 +137,7 @@ class CommunicationWidget(QWidget):
             session = self.db_manager.get_session()
 
             # Build query
-            query = session.query(CommunicationLog).join(Customer)
+            query = session.query(CommunicationLog).join(Customer, CommunicationLog.customer_id == Customer.id)
 
             # Apply status filter
             status_text = self.status_filter.currentText()
