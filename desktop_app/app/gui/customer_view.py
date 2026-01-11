@@ -4,7 +4,7 @@ Customer View Widget
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget,
-    QTableWidgetItem, QLineEdit, QHeaderView
+    QTableWidgetItem, QLineEdit, QHeaderView, QCheckBox, QComboBox
 )
 from PyQt6.QtCore import Qt
 import logging
@@ -44,10 +44,10 @@ class CustomerWidget(QWidget):
 
         # Customer table
         self.table = QTableWidget()
-        self.table.setColumnCount(7)
+        self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels([
-            "Customer ID", "Company Name", "Email", "Phone",
-            "Open Invoices", "Current Balance", "Payment Score"
+            "Workflow", "Customer ID", "Company Name", "Email", "Phone",
+            "Payment Terms", "Open Invoices", "Current Balance", "Payment Score"
         ])
 
         # Make table look nice
@@ -92,17 +92,41 @@ class CustomerWidget(QWidget):
             total_balance = 0.0
 
             for row, customer in enumerate(customers):
+                # Workflow checkbox
+                workflow_widget = QWidget()
+                workflow_layout = QHBoxLayout(workflow_widget)
+                workflow_layout.setContentsMargins(0, 0, 0, 0)
+                workflow_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+                workflow_checkbox = QCheckBox()
+                workflow_checkbox.setChecked(customer.workflow_enabled if hasattr(customer, 'workflow_enabled') else True)
+                workflow_checkbox.stateChanged.connect(
+                    lambda state, c=customer: self._update_workflow_enabled(c, state == Qt.CheckState.Checked.value)
+                )
+                workflow_layout.addWidget(workflow_checkbox)
+                self.table.setCellWidget(row, 0, workflow_widget)
+
                 # Customer ID
-                self.table.setItem(row, 0, QTableWidgetItem(customer.customer_id or "N/A"))
+                self.table.setItem(row, 1, QTableWidgetItem(customer.customer_id or "N/A"))
 
                 # Company name
-                self.table.setItem(row, 1, QTableWidgetItem(customer.company_name))
+                self.table.setItem(row, 2, QTableWidgetItem(customer.company_name))
 
                 # Email
-                self.table.setItem(row, 2, QTableWidgetItem(customer.email or "N/A"))
+                self.table.setItem(row, 3, QTableWidgetItem(customer.email or "N/A"))
 
                 # Phone
-                self.table.setItem(row, 3, QTableWidgetItem(customer.phone or "N/A"))
+                self.table.setItem(row, 4, QTableWidgetItem(customer.phone or "N/A"))
+
+                # Payment terms dropdown
+                terms_combo = QComboBox()
+                terms_combo.addItems(["7 days", "30 days", "30 days EOM", "60 days", "60 days EOM", "90 days"])
+                current_terms = customer.payment_terms if hasattr(customer, 'payment_terms') and customer.payment_terms else "30 days"
+                terms_combo.setCurrentText(current_terms)
+                terms_combo.currentTextChanged.connect(
+                    lambda text, c=customer: self._update_payment_terms(c, text)
+                )
+                self.table.setCellWidget(row, 5, terms_combo)
 
                 # Count open invoices
                 open_count = session.query(Invoice).filter(
@@ -112,7 +136,7 @@ class CustomerWidget(QWidget):
 
                 count_item = QTableWidgetItem(str(open_count))
                 count_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.table.setItem(row, 4, count_item)
+                self.table.setItem(row, 6, count_item)
 
                 # Current balance
                 balance_item = QTableWidgetItem(f"${customer.current_balance:,.2f}")
@@ -125,7 +149,7 @@ class CustomerWidget(QWidget):
                 elif customer.current_balance > 10000:
                     balance_item.setBackground(Qt.GlobalColor.yellow)
 
-                self.table.setItem(row, 5, balance_item)
+                self.table.setItem(row, 7, balance_item)
 
                 # Payment score (simplified calculation)
                 score = customer.payment_score if customer.payment_score else "N/A"
@@ -140,7 +164,7 @@ class CustomerWidget(QWidget):
                     else:
                         score_item.setForeground(Qt.GlobalColor.red)
 
-                self.table.setItem(row, 6, score_item)
+                self.table.setItem(row, 8, score_item)
 
                 total_balance += customer.current_balance
 
@@ -156,3 +180,41 @@ class CustomerWidget(QWidget):
             logger.error(f"Failed to refresh customer view: {e}")
             self.summary_label.setText(f"Error loading customers: {str(e)}")
             self.summary_label.setStyleSheet("color: red;")
+
+    def _update_workflow_enabled(self, customer, enabled):
+        """Update workflow enabled status for customer"""
+        try:
+            from ..models.database import Customer
+
+            session = self.db_manager.get_session()
+
+            # Update customer
+            db_customer = session.query(Customer).filter_by(id=customer.id).first()
+            if db_customer:
+                db_customer.workflow_enabled = enabled
+                session.commit()
+                logger.info(f"Updated workflow_enabled for {customer.company_name}: {enabled}")
+
+            session.close()
+
+        except Exception as e:
+            logger.error(f"Failed to update workflow_enabled: {e}")
+
+    def _update_payment_terms(self, customer, terms):
+        """Update payment terms for customer"""
+        try:
+            from ..models.database import Customer
+
+            session = self.db_manager.get_session()
+
+            # Update customer
+            db_customer = session.query(Customer).filter_by(id=customer.id).first()
+            if db_customer:
+                db_customer.payment_terms = terms
+                session.commit()
+                logger.info(f"Updated payment_terms for {customer.company_name}: {terms}")
+
+            session.close()
+
+        except Exception as e:
+            logger.error(f"Failed to update payment_terms: {e}")

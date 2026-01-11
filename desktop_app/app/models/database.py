@@ -65,6 +65,7 @@ class Customer(Base):
     # Financial
     current_balance = Column(Float, default=0.0)
     credit_limit = Column(Float, default=0.0)
+    payment_terms = Column(String(50), default="30 days")  # e.g., "7 days", "30 days", "30 days EOM", "60 days", "60 days EOM"
 
     # Scoring
     payment_score = Column(Integer, default=50)  # 0-100
@@ -74,6 +75,7 @@ class Customer(Base):
     # Communication preferences
     communication_enabled = Column(Boolean, default=True)
     auto_reminders_enabled = Column(Boolean, default=True)
+    workflow_enabled = Column(Boolean, default=True)  # Enable/disable workflows for this customer
     preferred_channel = Column(SQLEnum(CommunicationChannel), default=CommunicationChannel.EMAIL)
 
     # Integration
