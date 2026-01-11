@@ -29,15 +29,16 @@ class CSVImporter:
         'invoice_number': ['invoice', 'invoice_number', 'invoice_no', 'inv_no', 'reference'],
         'invoice_date': ['invoice_date', 'inv_date', 'date', 'transaction_date'],
         'due_date': ['due_date', 'payment_due', 'due'],
-        'original_amount': ['amount', 'invoice_amount', 'total', 'original_amount', 'balance'],
+        'original_amount': ['amount', 'invoice_amount', 'original_amount', 'balance'],
         'amount_outstanding': ['outstanding', 'amount_outstanding', 'balance_due', 'open_balance'],
+        'total': ['total', 'total_amount', 'total_outstanding'],
 
         # Aging fields
         'current': ['current', '0_days', 'not_due'],
-        'days_0_30': ['0-30', '1-30', '30_days', '0_30'],
-        'days_31_60': ['31-60', '60_days', '31_60'],
-        'days_61_90': ['61-90', '90_days', '61_90'],
-        'days_90_plus': ['90+', '90plus', '90_plus', 'over_90'],
+        'days_0_30': ['0-30', '1-30', '30_days', '0_30', '<1month', '< 1 month', '<1 month'],
+        'days_31_60': ['31-60', '60_days', '31_60', '1 month', '1month'],
+        'days_61_90': ['61-90', '90_days', '61_90', '2 months', '2months'],
+        'days_90_plus': ['90+', '90plus', '90_plus', 'over_90', '3 months', '3months', 'older'],
     }
 
     def __init__(self):
@@ -104,7 +105,8 @@ class CSVImporter:
             self.column_map = column_map
 
             # Validate required fields
-            required_fields = ['customer_name', 'invoice_number', 'amount_outstanding']
+            # invoice_number and amount_outstanding are optional for customer summaries
+            required_fields = ['customer_name']
             missing_fields = [f for f in required_fields if f not in column_map]
 
             if missing_fields:
@@ -149,14 +151,21 @@ class CSVImporter:
         record = {}
 
         # Extract customer information
-        record['customer_name'] = self._get_value(row, column_map, 'customer_name')
+        customer_name = self._get_value(row, column_map, 'customer_name')
+        record['customer_name'] = customer_name
         record['customer_id'] = self._get_value(row, column_map, 'customer_id', required=False)
         record['email'] = self._get_value(row, column_map, 'email', required=False)
         record['phone'] = self._get_value(row, column_map, 'phone', required=False)
         record['contact_name'] = self._get_value(row, column_map, 'contact_name', required=False)
 
-        # Extract invoice information
-        record['invoice_number'] = self._get_value(row, column_map, 'invoice_number')
+        # Extract invoice information (optional for customer summaries)
+        invoice_number = self._get_value(row, column_map, 'invoice_number', required=False)
+        if not invoice_number:
+            # Generate summary invoice number
+            invoice_number = f"SUMMARY-{customer_name[:10].upper().replace(' ', '')}"
+            record['is_summary'] = True
+        record['invoice_number'] = invoice_number
+
         record['invoice_date'] = self._parse_date(
             self._get_value(row, column_map, 'invoice_date', required=False),
             date_format
@@ -166,13 +175,22 @@ class CSVImporter:
             date_format
         )
 
-        # Extract amounts
+        # Extract amounts - try amount_outstanding first, then total column
+        amount_outstanding = self._parse_amount(
+            self._get_value(row, column_map, 'amount_outstanding', required=False)
+        )
+        if amount_outstanding == 0:
+            amount_outstanding = self._parse_amount(
+                self._get_value(row, column_map, 'total', required=False)
+            )
+
         record['original_amount'] = self._parse_amount(
             self._get_value(row, column_map, 'original_amount', required=False)
         )
-        record['amount_outstanding'] = self._parse_amount(
-            self._get_value(row, column_map, 'amount_outstanding')
-        )
+        if record['original_amount'] == 0:
+            record['original_amount'] = amount_outstanding
+
+        record['amount_outstanding'] = amount_outstanding
 
         # Extract aging buckets (if available)
         record['aging_buckets'] = {
@@ -183,14 +201,36 @@ class CSVImporter:
             '90+': self._parse_amount(self._get_value(row, column_map, 'days_90_plus', required=False)),
         }
 
-        # Calculate aging bucket if due date provided
+        # Calculate aging bucket and days overdue
         if record['due_date']:
+            # If we have a due date, calculate from that
             days_overdue = (date.today() - record['due_date']).days
             record['days_overdue'] = days_overdue
             record['aging_bucket'] = self._calculate_aging_bucket(days_overdue)
         else:
-            record['days_overdue'] = 0
-            record['aging_bucket'] = 'current'
+            # If no due date, infer from aging buckets
+            # Find which bucket has the highest amount
+            if record['aging_buckets']:
+                # Estimate days overdue based on which bucket has the most money
+                bucket_days = {
+                    'current': 0,
+                    '0-30': 15,     # Mid-point of 0-30
+                    '31-60': 45,    # Mid-point of 31-60
+                    '61-90': 75,    # Mid-point of 61-90
+                    '90+': 120,     # Conservative estimate for 90+
+                }
+
+                # Find bucket with highest amount
+                max_bucket = max(record['aging_buckets'].items(), key=lambda x: x[1])
+                if max_bucket[1] > 0:  # If there's any amount in a bucket
+                    record['aging_bucket'] = max_bucket[0]
+                    record['days_overdue'] = bucket_days.get(max_bucket[0], 0)
+                else:
+                    record['aging_bucket'] = 'current'
+                    record['days_overdue'] = 0
+            else:
+                record['days_overdue'] = 0
+                record['aging_bucket'] = 'current'
 
         return record
 
