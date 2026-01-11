@@ -4,9 +4,9 @@ Database Manager - SQLite Database
 Handles local SQLite database for storing receivables data.
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, Boolean, Text, Enum as SQLEnum
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, Boolean, Text, Enum as SQLEnum, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, relationship
 from datetime import datetime, date
 import enum
 from pathlib import Path
@@ -83,6 +83,10 @@ class Customer(Base):
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
+    # Relationships
+    invoices = relationship("Invoice", backref="customer", foreign_keys="Invoice.customer_id")
+    communications = relationship("Communication", backref="customer", foreign_keys="Communication.customer_id")
+
 
 class Invoice(Base):
     """Invoice/Receivable model"""
@@ -90,7 +94,7 @@ class Invoice(Base):
 
     id = Column(Integer, primary_key=True)
     invoice_number = Column(String(100), unique=True, index=True, nullable=False)
-    customer_id = Column(Integer, nullable=False)
+    customer_id = Column(Integer, ForeignKey('customers.id'), nullable=False)
 
     # Dates
     invoice_date = Column(Date, nullable=False)
@@ -173,14 +177,15 @@ class Communication(Base):
     __tablename__ = "communications"
 
     id = Column(Integer, primary_key=True)
-    customer_id = Column(Integer, nullable=False)
-    invoice_id = Column(Integer)
+    customer_id = Column(Integer, ForeignKey('customers.id'), nullable=False)
+    invoice_id = Column(Integer, ForeignKey('invoices.id'))
 
     # Communication details
-    channel = Column(SQLEnum(CommunicationChannel), nullable=False)
+    channel = Column(String(50), nullable=False)  # email, sms
     communication_type = Column(String(50))  # reminder, escalation, payment_confirmation, etc.
     subject = Column(String(500))
     message_body = Column(Text)
+    message_content = Column(Text)  # Alias for message_body
 
     # Recipients
     recipient_email = Column(String(255))
@@ -193,6 +198,7 @@ class Communication(Base):
     opened_at = Column(DateTime)
     clicked_at = Column(DateTime)
     status = Column(String(50))  # queued, sent, delivered, failed, bounced
+    error_message = Column(Text)  # Error details for failed communications
 
     # AI
     ai_generated = Column(Boolean, default=False)
@@ -209,6 +215,13 @@ class Communication(Base):
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.now)
+
+    # Relationships
+    invoice = relationship("Invoice", backref="communications", foreign_keys=[invoice_id])
+
+
+# Alias for backwards compatibility
+CommunicationLog = Communication
 
 
 class WorkflowLog(Base):

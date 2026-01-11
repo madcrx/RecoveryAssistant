@@ -127,11 +127,43 @@ class PDFParser:
 
         record = {}
 
-        # Customer name (required)
+        # Customer name (required) - may span multiple cells
         if 'customer' in column_map:
-            customer = row[column_map['customer']]
-            if customer and str(customer).strip():
-                record['customer_name'] = str(customer).strip()
+            customer_idx = column_map['customer']
+
+            # Get the customer name from the identified column
+            customer_name = str(row[customer_idx] or '').strip()
+
+            # Check if this might be a multi-cell name
+            # If the next cell(s) don't look like numbers or dates, they might be part of the name
+            next_idx = customer_idx + 1
+            while next_idx < len(row) and next_idx < customer_idx + 4:  # Look ahead up to 3 cells
+                next_cell = str(row[next_idx] or '').strip()
+
+                # Skip if empty
+                if not next_cell:
+                    next_idx += 1
+                    continue
+
+                # Check if this looks like a company name continuation (not a number, date, or column header)
+                is_number = bool(re.match(r'^[\d,.$()%-]+$', next_cell))
+                is_date = bool(re.match(r'^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$', next_cell))
+                is_column_name = next_idx in column_map.values() and next_idx != customer_idx
+
+                if not is_number and not is_date and not is_column_name:
+                    # Likely part of the company name
+                    customer_name += ' ' + next_cell
+                else:
+                    # Stop here
+                    break
+
+                next_idx += 1
+
+            # Clean up the company name
+            customer_name = re.sub(r'\s+', ' ', customer_name).strip()  # Normalize whitespace
+
+            if customer_name:
+                record['customer_name'] = customer_name
             else:
                 return None  # Skip if no customer
         else:
