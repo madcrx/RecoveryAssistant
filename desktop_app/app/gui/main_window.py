@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -242,33 +243,23 @@ class MainWindow(QMainWindow):
 
     def _import_pdf(self):
         """Import PDF file"""
+        from .import_wizard import ImportDialog
 
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select PDF File",
-            "",
-            "PDF Files (*.pdf)"
-        )
-
-        if file_path:
-            logger.info(f"Importing PDF: {file_path}")
-            # TODO: Implement PDF import
-            self.status_label.setText(f"Importing PDF: {file_path}")
+        dialog = ImportDialog('pdf', self.db_manager, self)
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            # Refresh views after import
+            self._refresh_all()
+            self.status_label.setText("PDF import completed")
 
     def _import_csv(self):
         """Import CSV file"""
+        from .import_wizard import ImportDialog
 
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select CSV File",
-            "",
-            "CSV Files (*.csv)"
-        )
-
-        if file_path:
-            logger.info(f"Importing CSV: {file_path}")
-            # TODO: Implement CSV import
-            self.status_label.setText(f"Importing CSV: {file_path}")
+        dialog = ImportDialog('csv', self.db_manager, self)
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            # Refresh views after import
+            self._refresh_all()
+            self.status_label.setText("CSV import completed")
 
     def _backup_database(self):
         """Backup database"""
@@ -367,25 +358,151 @@ class MainWindow(QMainWindow):
 
         logger.info("Running workflows manually")
         self.status_label.setText("Running workflows...")
-        # TODO: Implement workflow execution
+
+        try:
+            from ..services.workflow_engine import get_workflow_engine
+
+            # Run workflows in background
+            engine = get_workflow_engine(self.db_manager)
+            session = self.db_manager.get_session()
+
+            result = engine.run_workflows(session)
+            session.close()
+
+            # Show results
+            QMessageBox.information(
+                self,
+                "Workflows Complete",
+                f"Workflow execution completed:\n\n"
+                f"• Payment reminders sent: {result['reminders_sent']}\n"
+                f"• Collection notices sent: {result['collection_notices_sent']}\n"
+                f"• Thank you messages sent: {result['thank_you_sent']}\n"
+                f"• Errors: {result['errors']}"
+            )
+
+            self.status_label.setText("Workflows completed")
+            logger.info(f"Workflows completed: {result}")
+
+        except Exception as e:
+            logger.error(f"Failed to run workflows: {e}")
+            QMessageBox.critical(
+                self,
+                "Workflow Error",
+                f"Failed to run workflows:\n{str(e)}"
+            )
+            self.status_label.setText("Workflow execution failed")
 
     def _show_integration_settings(self):
         """Show integration settings dialog"""
+        from .settings_dialogs import IntegrationSettingsDialog
 
-        # TODO: Implement settings dialog
-        QMessageBox.information(self, "Settings", "Integration settings dialog")
+        dialog = IntegrationSettingsDialog(self.config_manager, self)
+        dialog.exec()
 
     def _show_workflow_settings(self):
         """Show workflow settings dialog"""
+        from .settings_dialogs import WorkflowSettingsDialog
 
-        # TODO: Implement settings dialog
-        QMessageBox.information(self, "Settings", "Workflow settings dialog")
+        dialog = WorkflowSettingsDialog(self.config_manager, self)
+        dialog.exec()
 
     def _show_user_guide(self):
         """Show user guide"""
 
-        # TODO: Open user guide in browser or PDF viewer
-        QMessageBox.information(self, "User Guide", "User guide will open here")
+        guide_text = """
+Recovery Assistant - User Guide
+
+OVERVIEW
+Recovery Assistant helps you manage accounts receivable and automate collection processes.
+
+GETTING STARTED
+
+1. Import Data
+   • Go to File > Import
+   • Choose PDF, CSV, or sync with Xero
+   • Data will be automatically parsed and imported to database
+
+2. View Dashboard
+   • See total outstanding, open invoices, and aging metrics
+   • Track collection effectiveness
+   • Monitor overdue accounts
+
+3. Manage Invoices
+   • View all invoices with filters
+   • Search by invoice number or customer
+   • Color-coded aging indicators
+
+4. Track Customers
+   • View customer balances and payment history
+   • Monitor high-risk customers
+   • Track payment scores
+
+5. Analytics & Reports
+   • View detailed collection metrics
+   • Analyze aging buckets
+   • Identify high-risk customers
+   • Export reports to Excel/CSV
+
+6. Automated Workflows
+   • Configure in Settings > Workflows
+   • Automatic payment reminders for 7-30 day overdue
+   • Collection notices for 90+ day overdue
+   • Thank you messages for payments
+   • Runs daily or trigger manually
+
+7. Communications
+   • View all sent emails and SMS
+   • Track delivery status
+   • Resend failed messages
+   • View message history per customer
+
+INTEGRATIONS
+
+Xero:
+  • Sync invoices automatically
+  • Two-way sync of payment status
+  • Configure in Settings > Integrations
+
+Email (Outlook/Gmail):
+  • Send automated reminders
+  • Track open and response rates
+  • Configure SMTP settings
+
+TIPS
+
+• Import data regularly to keep information current
+• Review analytics weekly to identify trends
+• Monitor high-risk customers proactively
+• Customize workflow templates for your business
+• Export reports for financial reviews
+
+SUPPORT
+
+For questions or issues:
+• Check Settings > About for version info
+• Review logs in the data directory
+• Contact support for assistance
+
+Version 1.0
+        """
+
+        # Show in a scrollable dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("User Guide")
+        dialog.setMinimumSize(700, 600)
+
+        layout = QVBoxLayout(dialog)
+
+        text_edit = QTextEdit()
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(guide_text)
+        layout.addWidget(text_edit)
+
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(dialog.accept)
+        layout.addWidget(close_btn)
+
+        dialog.exec()
 
     def _show_about(self):
         """Show about dialog"""
@@ -435,8 +552,11 @@ class MainWindow(QMainWindow):
     def _check_xero_connection(self) -> bool:
         """Check Xero connection"""
 
-        # TODO: Implement Xero connection check
-        return False
+        try:
+            from ..services.xero_client import xero_client
+            return xero_client.is_connected()
+        except:
+            return False
 
     def closeEvent(self, event):
         """Handle window close event"""
