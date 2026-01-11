@@ -193,14 +193,18 @@ class PDFParser:
         else:
             return None
 
-        # Invoice number (required)
+        # Invoice number (optional for customer summaries)
         if 'invoice' in column_map:
             invoice = row[column_map['invoice']]
             if invoice and str(invoice).strip():
                 record['invoice_number'] = str(invoice).strip()
             else:
                 # Generate invoice number from customer + amount
-                record['invoice_number'] = f"INV-{record['customer_name'][:3].upper()}-{len(self.data)+1}"
+                record['invoice_number'] = f"SUMMARY-{record['customer_name'][:10].upper().replace(' ', '')}-{len(self.data)+1}"
+        else:
+            # No invoice column - this is a customer aging summary
+            record['invoice_number'] = f"SUMMARY-{record['customer_name'][:10].upper().replace(' ', '')}"
+            record['is_summary'] = True  # Mark as summary record
 
         # Dates
         if 'date' in column_map:

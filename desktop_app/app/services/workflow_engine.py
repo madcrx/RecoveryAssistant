@@ -60,10 +60,12 @@ class WorkflowEngine:
         from ..models.database import Invoice, Customer, InvoiceStatus, CommunicationLog
 
         # Find invoices that are 7-30 days overdue and haven't been reminded recently
-        overdue_invoices = session.query(Invoice).join(Customer).filter(
+        # Only for customers with workflows enabled
+        overdue_invoices = session.query(Invoice).join(Customer, Invoice.customer_id == Customer.id).filter(
             Invoice.status.in_([InvoiceStatus.OPEN, InvoiceStatus.OVERDUE]),
             Invoice.days_outstanding >= 7,
-            Invoice.days_outstanding < 90
+            Invoice.days_outstanding < 90,
+            Customer.workflow_enabled == True
         ).all()
 
         sent_count = 0
@@ -91,9 +93,11 @@ class WorkflowEngine:
         from ..models.database import Invoice, Customer, InvoiceStatus, CommunicationLog
 
         # Find invoices that are 90+ days overdue
-        severely_overdue = session.query(Invoice).join(Customer).filter(
+        # Only for customers with workflows enabled
+        severely_overdue = session.query(Invoice).join(Customer, Invoice.customer_id == Customer.id).filter(
             Invoice.status.in_([InvoiceStatus.OPEN, InvoiceStatus.OVERDUE]),
-            Invoice.days_outstanding >= 90
+            Invoice.days_outstanding >= 90,
+            Customer.workflow_enabled == True
         ).all()
 
         sent_count = 0
@@ -121,9 +125,11 @@ class WorkflowEngine:
         from ..models.database import Invoice, Customer, InvoiceStatus, CommunicationLog
 
         # Find recently paid invoices (last 3 days)
-        recent_payments = session.query(Invoice).join(Customer).filter(
+        # Only for customers with workflows enabled
+        recent_payments = session.query(Invoice).join(Customer, Invoice.customer_id == Customer.id).filter(
             Invoice.status == InvoiceStatus.PAID,
-            Invoice.updated_at >= datetime.now() - timedelta(days=3)
+            Invoice.updated_at >= datetime.now() - timedelta(days=3),
+            Customer.workflow_enabled == True
         ).all()
 
         sent_count = 0
