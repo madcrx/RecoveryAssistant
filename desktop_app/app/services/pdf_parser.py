@@ -113,10 +113,10 @@ class PDFParser:
             'due_date': ['due', 'due date', 'payment due'],
             'amount': ['amount', 'balance', 'total', 'outstanding'],
             'current': ['current', '0 days', 'not due'],
-            '0-30': ['0-30', '1-30', '30', '30 days', '<1 month', '< 1 month'],
-            '31-60': ['31-60', '60', '60 days', '1 month'],
-            '61-90': ['61-90', '90', '90 days', '2 months'],
-            '90+': ['90+', '90 plus', 'over 90', '>90', '3 months', 'older'],
+            '0-30': ['0-30', '1-30', '30', '30 days', '<1 month', '< 1 month', '<1month'],
+            '31-60': ['31-60', '60', '60 days', '1 month', '1month'],
+            '61-90': ['61-90', '90', '90 days', '2 months', '2months'],
+            '90+': ['90+', '90 plus', 'over 90', '>90', '3 months', '3months', 'older'],
         }
 
         for col_idx, header in enumerate(headers):
@@ -230,16 +230,40 @@ class PDFParser:
         record['original_amount'] = total_amount
         record['aging_buckets'] = aging_buckets
 
-        # Calculate aging bucket if due date available
+        # Calculate aging bucket and days overdue
         if record.get('due_date'):
+            # If we have a due date, calculate from that
             days_overdue = (date.today() - record['due_date']).days
             record['days_overdue'] = max(0, days_overdue)
             record['aging_bucket'] = self._calculate_aging_bucket(days_overdue)
         else:
-            record['days_overdue'] = 0
-            record['aging_bucket'] = 'current'
+            # If no due date, infer from aging buckets
+            # Find which bucket has the highest amount
+            if aging_buckets:
+                # Estimate days overdue based on which bucket has the most money
+                bucket_days = {
+                    'current': 0,
+                    '0-30': 15,     # Mid-point of 0-30
+                    '31-60': 45,    # Mid-point of 31-60
+                    '61-90': 75,    # Mid-point of 61-90
+                    '90+': 120,     # Conservative estimate for 90+
+                }
 
-        return record if total_amount > 0 else None
+                # Find bucket with highest amount
+                max_bucket = max(aging_buckets.items(), key=lambda x: x[1])
+                if max_bucket[1] > 0:  # If there's any amount in a bucket
+                    record['aging_bucket'] = max_bucket[0]
+                    record['days_overdue'] = bucket_days.get(max_bucket[0], 0)
+                else:
+                    record['aging_bucket'] = 'current'
+                    record['days_overdue'] = 0
+            else:
+                record['days_overdue'] = 0
+                record['aging_bucket'] = 'current'
+
+        # Return record even if amount is 0 (for customer summaries)
+        # Only reject if we couldn't extract any meaningful data
+        return record
 
     def _process_text(self, text: str, page_num: int):
         """Process plain text extraction (fallback)"""

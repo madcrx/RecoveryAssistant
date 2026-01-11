@@ -212,7 +212,14 @@ class DashboardWidget(QWidget):
 
             # Clear aging layout
             for i in reversed(range(self.aging_layout.count())):
-                self.aging_layout.itemAt(i).widget().setParent(None)
+                item = self.aging_layout.itemAt(i)
+                if item is not None:
+                    widget = item.widget()
+                    if widget is not None:
+                        widget.setParent(None)
+                    else:
+                        # It's a layout, remove it
+                        self.aging_layout.removeItem(item)
 
             # Add aging rows
             for bucket_name, data in aging_data.items():
