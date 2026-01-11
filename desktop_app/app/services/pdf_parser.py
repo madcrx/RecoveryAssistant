@@ -85,6 +85,11 @@ class PDFParser:
                 if not row or all(cell is None or str(cell).strip() == '' for cell in row):
                     continue
 
+                # Skip total/subtotal rows
+                first_cell = str(row[0] or '').strip().lower() if row else ''
+                if any(keyword in first_cell for keyword in ['total', 'subtotal', 'percentage', 'grand total']):
+                    continue
+
                 record = self._extract_record_from_row(row, column_map)
                 if record:
                     self.data.append(record)
@@ -102,16 +107,16 @@ class PDFParser:
 
         # Common column patterns
         patterns = {
-            'customer': ['customer', 'company', 'name', 'debtor', 'client'],
+            'customer': ['customer', 'company', 'name', 'debtor', 'client', 'contact'],
             'invoice': ['invoice', 'inv', 'number', 'inv#', 'invoice#'],
             'date': ['date', 'inv date', 'invoice date'],
             'due_date': ['due', 'due date', 'payment due'],
             'amount': ['amount', 'balance', 'total', 'outstanding'],
             'current': ['current', '0 days', 'not due'],
-            '0-30': ['0-30', '1-30', '30', '30 days'],
-            '31-60': ['31-60', '60', '60 days'],
-            '61-90': ['61-90', '90', '90 days'],
-            '90+': ['90+', '90 plus', 'over 90', '>90'],
+            '0-30': ['0-30', '1-30', '30', '30 days', '<1 month', '< 1 month'],
+            '31-60': ['31-60', '60', '60 days', '1 month'],
+            '61-90': ['61-90', '90', '90 days', '2 months'],
+            '90+': ['90+', '90 plus', 'over 90', '>90', '3 months', 'older'],
         }
 
         for col_idx, header in enumerate(headers):
@@ -131,41 +136,60 @@ class PDFParser:
         if 'customer' in column_map:
             customer_idx = column_map['customer']
 
-            # Get the customer name from the identified column
-            customer_name = str(row[customer_idx] or '').strip()
+            # Collect all name parts starting from customer column
+            name_parts = []
 
-            # Check if this might be a multi-cell name
-            # If the next cell(s) don't look like numbers or dates, they might be part of the name
-            next_idx = customer_idx + 1
-            while next_idx < len(row) and next_idx < customer_idx + 4:  # Look ahead up to 3 cells
-                next_cell = str(row[next_idx] or '').strip()
+            # Get known numeric column indices to avoid including them in the name
+            numeric_columns = set()
+            for key in ['current', '0-30', '31-60', '61-90', '90+', 'amount', 'invoice']:
+                if key in column_map:
+                    numeric_columns.add(column_map[key])
 
-                # Skip if empty
-                if not next_cell:
-                    next_idx += 1
+            # Start from customer column and look ahead
+            for idx in range(customer_idx, min(len(row), customer_idx + 6)):  # Look ahead up to 5 cells
+                cell = str(row[idx] or '').strip()
+
+                # Skip empty cells
+                if not cell:
                     continue
 
-                # Check if this looks like a company name continuation (not a number, date, or column header)
-                is_number = bool(re.match(r'^[\d,.$()%-]+$', next_cell))
-                is_date = bool(re.match(r'^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$', next_cell))
-                is_column_name = next_idx in column_map.values() and next_idx != customer_idx
-
-                if not is_number and not is_date and not is_column_name:
-                    # Likely part of the company name
-                    customer_name += ' ' + next_cell
-                else:
-                    # Stop here
+                # Stop if we hit a numeric column
+                if idx in numeric_columns and idx != customer_idx:
                     break
 
-                next_idx += 1
+                # Check if this looks like a number or date
+                is_number = bool(re.match(r'^[\d,.$()%-]+$', cell))
+                is_date = bool(re.match(r'^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$', cell))
+
+                if is_number or is_date:
+                    # If we already have some name parts, stop here
+                    if name_parts:
+                        break
+                    # If this is the first cell and it's a number, skip this row
+                    if idx == customer_idx:
+                        return None
+                    continue
+
+                # Check if it looks like a header (all caps, short, known column name)
+                if cell.upper() == cell and len(cell) < 8 and cell in ['MONTH', 'MONTHS', 'TOTAL', 'OLDER', 'CURRENT']:
+                    # This is likely a column header, skip this row
+                    if idx == customer_idx:
+                        return None
+                    break
+
+                # Add this as part of the name
+                name_parts.append(cell)
+
+            # Join all parts with spaces
+            customer_name = ' '.join(name_parts)
 
             # Clean up the company name
-            customer_name = re.sub(r'\s+', ' ', customer_name).strip()  # Normalize whitespace
+            customer_name = re.sub(r'\s+', ' ', customer_name).strip()
 
-            if customer_name:
+            if customer_name and len(customer_name) > 1:
                 record['customer_name'] = customer_name
             else:
-                return None  # Skip if no customer
+                return None  # Skip if no valid customer name
         else:
             return None
 
