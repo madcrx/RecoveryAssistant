@@ -291,8 +291,115 @@ class MainWindow(QMainWindow):
 
         logger.info(f"Syncing with {integration_name}")
         self.status_label.setText(f"Syncing with {integration_name}...")
-        # TODO: Implement sync
-        self.sync_requested.emit(integration_name)
+
+        try:
+            if integration_name.lower() == "xero":
+                from ..services.xero_client import xero_client
+                from ..models.database import Customer, Invoice, InvoiceStatus, AgingBucket
+                from datetime import date
+
+                if not xero_client.is_connected():
+                    QMessageBox.warning(
+                        self,
+                        "Xero Not Connected",
+                        "Xero is not connected. Please configure Xero credentials in Settings > Integrations."
+                    )
+                    return
+
+                # Get aged receivables from Xero
+                invoices_data = xero_client.get_aged_receivables()
+
+                if not invoices_data:
+                    QMessageBox.information(
+                        self,
+                        "No Data",
+                        "No invoices found in Xero or sync failed."
+                    )
+                    return
+
+                # Import to database
+                session = self.db_manager.get_session()
+                sync_count = 0
+
+                try:
+                    for data in invoices_data:
+                        # Find or create customer
+                        customer = session.query(Customer).filter_by(
+                            customer_id=data.get('customer_id')
+                        ).first()
+
+                        if not customer:
+                            customer = Customer(
+                                customer_id=data.get('customer_id', f"XERO-{sync_count}"),
+                                company_name=data['customer_name'],
+                                email=data.get('email'),
+                                current_balance=data['amount_outstanding']
+                            )
+                            session.add(customer)
+                            session.flush()
+
+                        # Find or update invoice
+                        invoice = session.query(Invoice).filter_by(
+                            invoice_number=data['invoice_number']
+                        ).first()
+
+                        if not invoice:
+                            invoice = Invoice(
+                                invoice_number=data['invoice_number'],
+                                customer_id=customer.id,
+                                invoice_date=data.get('invoice_date', date.today()),
+                                due_date=data.get('due_date', date.today()),
+                                original_amount=data.get('original_amount', data['amount_outstanding']),
+                                amount_outstanding=data['amount_outstanding'],
+                                amount_paid=data.get('amount_paid', 0.0),
+                                status=InvoiceStatus.OPEN if data['amount_outstanding'] > 0 else InvoiceStatus.PAID,
+                                aging_bucket=data.get('aging_bucket', AgingBucket.CURRENT),
+                                days_outstanding=data.get('days_overdue', 0)
+                            )
+                            session.add(invoice)
+                        else:
+                            # Update existing
+                            invoice.amount_outstanding = data['amount_outstanding']
+                            invoice.amount_paid = data.get('amount_paid', invoice.amount_paid)
+                            invoice.status = InvoiceStatus.OPEN if data['amount_outstanding'] > 0 else InvoiceStatus.PAID
+
+                        sync_count += 1
+
+                    session.commit()
+
+                    QMessageBox.information(
+                        self,
+                        "Sync Complete",
+                        f"Successfully synced {sync_count} invoices from Xero!"
+                    )
+
+                    # Refresh dashboard
+                    self.dashboard.refresh()
+                    self.status_label.setText(f"Synced {sync_count} invoices from Xero")
+
+                except Exception as e:
+                    session.rollback()
+                    raise
+                finally:
+                    session.close()
+
+            else:
+                QMessageBox.information(
+                    self,
+                    "Integration Sync",
+                    f"Sync for {integration_name} is not yet implemented."
+                )
+
+            self.sync_requested.emit(integration_name)
+
+        except Exception as e:
+            logger.error(f"Sync failed: {e}")
+            QMessageBox.critical(
+                self,
+                "Sync Failed",
+                f"Failed to sync with {integration_name}:\n{str(e)}"
+            )
+            self.status_label.setText("Sync failed")
 
     def _test_outlook(self):
         """Test Outlook connection"""
