@@ -90,14 +90,15 @@ class BackgroundScheduler:
         try:
             logger.info("Running automated workflows...")
 
-            # TODO: Import and call workflow engine
-            # from ..services.workflow_engine import workflow_engine
-            # session = self.db_manager.get_session()
-            # result = await workflow_engine.process_all_invoices(session)
-            # session.close()
-            # logger.info(f"Workflows completed: {result}")
+            from ..services.workflow_engine import get_workflow_engine
 
-            logger.info("Workflow execution placeholder (not yet implemented)")
+            engine = get_workflow_engine(self.db_manager)
+            session = self.db_manager.get_session()
+
+            result = engine.run_workflows(session)
+            session.close()
+
+            logger.info(f"Workflows completed: {result}")
 
         except Exception as e:
             logger.error(f"Workflow execution failed: {e}")
@@ -107,13 +108,74 @@ class BackgroundScheduler:
         try:
             logger.info("Syncing with Xero...")
 
-            # TODO: Import and call Xero client
-            # from ..services.xero_client import xero_client
-            # if xero_client.is_connected:
-            #     invoices = xero_client.sync_invoices()
-            #     logger.info(f"Synced {len(invoices)} invoices from Xero")
+            from ..services.xero_client import xero_client
 
-            logger.info("Xero sync placeholder (not yet implemented)")
+            if xero_client.is_connected():
+                # Sync invoices from Xero
+                invoices_data = xero_client.get_aged_receivables()
+
+                if invoices_data:
+                    # Import to database
+                    from ..models.database import Customer, Invoice, InvoiceStatus, AgingBucket
+                    from datetime import date
+
+                    session = self.db_manager.get_session()
+                    sync_count = 0
+
+                    try:
+                        for data in invoices_data:
+                            # Find or create customer
+                            customer = session.query(Customer).filter_by(
+                                customer_id=data.get('customer_id')
+                            ).first()
+
+                            if not customer:
+                                customer = Customer(
+                                    customer_id=data.get('customer_id', f"XERO-{sync_count}"),
+                                    company_name=data['customer_name'],
+                                    email=data.get('email'),
+                                    current_balance=data['amount_outstanding']
+                                )
+                                session.add(customer)
+                                session.flush()
+
+                            # Find or update invoice
+                            invoice = session.query(Invoice).filter_by(
+                                invoice_number=data['invoice_number']
+                            ).first()
+
+                            if not invoice:
+                                invoice = Invoice(
+                                    invoice_number=data['invoice_number'],
+                                    customer_id=customer.id,
+                                    invoice_date=data.get('invoice_date', date.today()),
+                                    due_date=data.get('due_date', date.today()),
+                                    original_amount=data.get('original_amount', data['amount_outstanding']),
+                                    amount_outstanding=data['amount_outstanding'],
+                                    amount_paid=data.get('amount_paid', 0.0),
+                                    status=InvoiceStatus.OPEN if data['amount_outstanding'] > 0 else InvoiceStatus.PAID,
+                                    aging_bucket=data.get('aging_bucket', AgingBucket.CURRENT),
+                                    days_outstanding=data.get('days_overdue', 0)
+                                )
+                                session.add(invoice)
+                            else:
+                                # Update existing
+                                invoice.amount_outstanding = data['amount_outstanding']
+                                invoice.amount_paid = data.get('amount_paid', invoice.amount_paid)
+                                invoice.status = InvoiceStatus.OPEN if data['amount_outstanding'] > 0 else InvoiceStatus.PAID
+
+                            sync_count += 1
+
+                        session.commit()
+                        logger.info(f"Synced {sync_count} invoices from Xero")
+
+                    except Exception as e:
+                        session.rollback()
+                        raise
+                    finally:
+                        session.close()
+            else:
+                logger.info("Xero not connected - skipping sync")
 
         except Exception as e:
             logger.error(f"Xero sync failed: {e}")

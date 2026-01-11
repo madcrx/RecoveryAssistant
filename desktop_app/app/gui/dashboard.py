@@ -171,9 +171,23 @@ class DashboardWidget(QWidget):
             self.overdue_count_card = MetricCard("Overdue Invoices", str(overdue_count), "60+ days")
             self.metrics_layout.addWidget(self.overdue_count_card, 1, 1)
 
-            # Collection rate (placeholder for now)
+            # Collection rate - Calculate based on paid vs total invoices
+            total_invoices_all = session.query(Invoice).count()
+            paid_invoices_all = session.query(Invoice).filter(Invoice.status == InvoiceStatus.PAID).count()
+
+            if total_invoices_all > 0:
+                collection_rate = (paid_invoices_all / total_invoices_all) * 100
+                collection_subtitle = f"{paid_invoices_all} of {total_invoices_all} collected"
+            else:
+                collection_rate = 0
+                collection_subtitle = "No invoices yet"
+
             self.collection_rate_card.deleteLater()
-            self.collection_rate_card = MetricCard("Collection Rate", "N/A", "Needs payment data")
+            self.collection_rate_card = MetricCard(
+                "Collection Rate",
+                f"{collection_rate:.1f}%",
+                collection_subtitle
+            )
             self.metrics_layout.addWidget(self.collection_rate_card, 1, 2)
 
             # Aging distribution
